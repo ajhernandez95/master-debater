@@ -1,0 +1,1 @@
+export { Debate } from "./Debate";

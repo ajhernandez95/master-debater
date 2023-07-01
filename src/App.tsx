@@ -1,38 +1,53 @@
-import * as React from "react"
 import {
-  ChakraProvider,
-  Box,
-  Text,
-  Link,
-  VStack,
-  Code,
-  Grid,
-  theme,
-} from "@chakra-ui/react"
-import { ColorModeSwitcher } from "./ColorModeSwitcher"
-import { Logo } from "./Logo"
+  createBrowserRouter,
+  RouterProvider,
+  Navigate,
+} from "react-router-dom";
+import { ChakraProvider } from "@chakra-ui/react";
+import { theme } from "./themes";
+import { Root } from "./components/root";
+import { Debate } from "./pages/debate";
+
+export const routes = [
+  {
+    path: "/debate",
+    element: <Debate />,
+  },
+  {
+    path: "my-debates",
+    element: <Root />,
+  },
+];
+
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <Root />,
+    children: [
+      {
+        // The following route to handle redirection from the root path
+        index: true,
+        element: <Navigate to="/debate" replace />,
+      },
+      ...routes,
+    ],
+  },
+]);
 
 export const App = () => (
   <ChakraProvider theme={theme}>
-    <Box textAlign="center" fontSize="xl">
-      <Grid minH="100vh" p={3}>
-        <ColorModeSwitcher justifySelf="flex-end" />
-        <VStack spacing={8}>
-          <Logo h="40vmin" pointerEvents="none" />
-          <Text>
-            Edit <Code fontSize="xl">src/App.tsx</Code> and save to reload.
-          </Text>
-          <Link
-            color="teal.500"
-            href="https://chakra-ui.com"
-            fontSize="2xl"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Learn Chakra
-          </Link>
-        </VStack>
-      </Grid>
-    </Box>
+    <RouterProvider router={router} />
   </ChakraProvider>
-)
+);
+
+/**
+ * 1. What are you debating
+ * 2. Who are you debating - A professor, a politician, Elon Musk, Santa Clause
+ *
+ * When debate starts, user can enter their opening arugment which selects their stance or let the AI start and choose stance
+ */
+
+/**
+ * Debates send request to endpoint with the following data structure
+ * [{ role: "user", content: "Say poo" }, { role: “assistant”, content: “Poop is brown”}]
+ */
