@@ -3,6 +3,8 @@ import { mode } from "@chakra-ui/theme-tools";
 import type { StyleFunctionProps } from "@chakra-ui/styled-system";
 
 export const theme = extendTheme({
+  initialColorMode: "dark",
+  useSystemColorMode: false,
   fonts: {
     heading: `'Roboto Mono', sans-serif`,
     body: `'Roboto Mono', sans-serif`,
