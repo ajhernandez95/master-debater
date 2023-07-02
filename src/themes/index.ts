@@ -7,10 +7,13 @@ const Button = defineStyleConfig({
     bg: "whiteAlpha.200",
     background: "whiteAlpha.200",
     backgroundColor: "whiteAlpha.200",
+    color: "red.500",
   },
 });
 
 export const theme = extendTheme({
+  initialColorMode: "dark",
+  useSystemColorMode: false,
   components: {
     Button,
   },
@@ -22,7 +25,7 @@ export const theme = extendTheme({
     global: (props: StyleFunctionProps) => ({
       body: {
         fontFamily: "body",
-        color: mode("whiteAlpha.900", "whiteAlpha.900")(props),
+        color: "whiteAlpha.900",
         bg: mode(
           "linear-gradient(53deg, rgba(26,30,43,1) 0%, rgba(17,19,33,1) 52%, rgba(26,30,43,1) 100%)",
           "linear-gradient(53deg, rgba(26,30,43,1) 0%, rgba(17,19,33,1) 52%, rgba(26,30,43,1) 100%)"
