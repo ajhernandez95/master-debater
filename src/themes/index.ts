@@ -4,13 +4,13 @@ import type { StyleFunctionProps } from "@chakra-ui/styled-system";
 
 const Button = defineStyleConfig({
   baseStyle: {
-    bg: "red.200",
+    bg: "whiteAlpha.200",
+    background: "whiteAlpha.200",
+    backgroundColor: "whiteAlpha.200",
   },
 });
 
 export const theme = extendTheme({
-  initialColorMode: "dark",
-  useSystemColorMode: false,
   components: {
     Button,
   },
