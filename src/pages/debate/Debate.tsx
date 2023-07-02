@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Heading, VStack, Text, Box } from "@chakra-ui/react";
 import { IoMdArrowRoundBack } from "react-icons/io";
-import { Orb } from "../../animations/Orb";
+import { Orb } from "../../Orb";
 import { DebateConfig } from "../../components/debate-config";
 import { DebateConversation } from "../../components/debate-conversation";
 

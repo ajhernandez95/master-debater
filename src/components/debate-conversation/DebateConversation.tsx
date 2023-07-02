@@ -9,7 +9,7 @@ import {
   Button,
   Box,
 } from "@chakra-ui/react";
-import { Orb } from "../../animations/Orb";
+import { Orb } from "../../Orb";
 import Loader from "../../animations/Loader";
 
 interface DebateConversationProps {
