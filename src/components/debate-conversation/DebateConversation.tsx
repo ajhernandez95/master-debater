@@ -1,3 +1,5 @@
+import { useState, useEffect, useRef } from "react";
+import { useForm, SubmitHandler } from "react-hook-form";
 import {
   VStack,
   Grid,
@@ -7,18 +9,32 @@ import {
   Button,
   Box,
 } from "@chakra-ui/react";
-import { useState, useEffect, useRef } from "react";
+import { Orb } from "../../animations/Orb";
+import Loader from "../../animations/Loader";
 
 interface DebateConversationProps {
   debateConfig: any;
 }
 
+type Inputs = {
+  currMsg: string;
+};
+
 export const DebateConversation = ({
   debateConfig,
 }: DebateConversationProps) => {
-  const [currMsg, setCurrMsg] = useState("");
   const [messages, setMessages] = useState<any[]>([]);
   const boxRef = useRef<HTMLDivElement>(null);
+  const {
+    register,
+    handleSubmit,
+    watch,
+    setValue,
+    formState: { errors },
+  } = useForm<Inputs>();
+  const currMsg = watch("currMsg");
+
+  const onSubmit: SubmitHandler<Inputs> = (data) => console.log(data);
 
   useEffect(() => {
     if (boxRef.current) {
@@ -26,8 +42,10 @@ export const DebateConversation = ({
     }
   }, [messages]);
 
-  const handleResponseChange = (event: any) => {
-    setCurrMsg(event.target.value);
+  const handleKeyDown = (e: any) => {
+    if (e.metaKey && e.which === 13) {
+      handleDebateMessage();
+    }
   };
 
   const handleDebateMessage = async () => {
@@ -36,8 +54,16 @@ export const DebateConversation = ({
       setMessages((prevMessages) => [
         ...prevMessages,
         { role: "user", content: currMsg },
+        {
+          role: "assistant",
+          content: (
+            <Box w={["25px", "50px"]}>
+              <Loader />
+            </Box>
+          ),
+        },
       ]);
-      setCurrMsg("");
+      setValue("currMsg", "");
       const response = await fetch("https://master-debater.jawn.workers.dev", {
         method: "POST",
         headers: {
@@ -64,10 +90,10 @@ export const DebateConversation = ({
           // Decoding the remaining data after the stream is done
           string += decoder.decode();
 
-          setMessages((prevMessages) => [
-            ...prevMessages,
-            { role: "assistant", content: string },
-          ]);
+          setMessages((prevMessages) => {
+            prevMessages[prevMessages.length - 1].content = string;
+            return [...prevMessages];
+          });
 
           console.log("Stream complete");
           return;
@@ -84,45 +110,75 @@ export const DebateConversation = ({
   };
 
   return (
-    <VStack maxH="100vh" height="100%" justifyContent="space-between">
-      <Box minH="80%" maxH="100%" overflowY="auto" ref={boxRef}>
-        <Grid
-          pt="10px"
-          mb="10px"
-          w="80vw"
-          templateRows="repeat(auto-fill, auto)"
-          gap={4}
+    <>
+      <VStack
+        fontSize="16px"
+        maxH="100vh"
+        height="100%"
+        justifyContent="space-between"
+      >
+        <Box minH="80vh" maxH="80vh" overflowY="auto" ref={boxRef}>
+          <Grid
+            pt="10px"
+            mb="10px"
+            w="80vw"
+            templateRows="repeat(auto-fill, auto)"
+            gap={4}
+          >
+            {messages.map((message) => {
+              return (
+                <GridItem
+                  justifySelf={
+                    message.role === "assistant" ? "flex-start" : "flex-end"
+                  }
+                  key={message.content}
+                  w="auto"
+                  maxW="80%"
+                  p="10px"
+                  borderRadius="10px"
+                  textAlign="start"
+                  bg={message.role === "assistant" ? "gray.200" : "gray.800"}
+                  color={message.role === "assistant" ? "gray.800" : "gray.100"}
+                >
+                  <Text>{message.content}</Text>
+                </GridItem>
+              );
+            })}
+          </Grid>
+        </Box>
+        <form
+          style={{
+            width: "100%",
+            maxWidth: "80vw",
+            height: "20vh",
+            maxHeight: "20vh",
+          }}
+          onSubmit={handleSubmit(onSubmit)}
         >
-          {messages.map((message) => {
-            return (
-              <GridItem
-                justifySelf={
-                  message.role === "assistant" ? "flex-start" : "flex-end"
-                }
-                key={message.content}
-                w="auto"
-                maxW="50%"
-                p="20px"
-                borderRadius="10px"
-                textAlign="start"
-                bg={message.role === "assistant" ? "gray.800" : "gray.100"}
-                color={message.role === "assistant" ? "gray.100" : "gray.800"}
-              >
-                <Text>{message.content}</Text>
-              </GridItem>
-            );
-          })}
-        </Grid>
+          <Textarea
+            mb="10px"
+            placeholder="Type your response here"
+            onKeyDown={handleKeyDown}
+            {...register("currMsg")}
+          />
+          <Button
+            mb="10px"
+            alignSelf="flex-end"
+            onClick={() => handleDebateMessage()}
+          >
+            Send
+          </Button>
+        </form>
+      </VStack>
+      <Box
+        position="absolute"
+        top="50%"
+        left="50%"
+        transform="translate(-50%, -70%)"
+        zIndex={-1}
+      >
+        <Orb />
       </Box>
-      <Textarea
-        mb="10px"
-        placeholder="Type your response here"
-        value={currMsg}
-        onChange={handleResponseChange}
-      />
-      <Button alignSelf="flex-end" onClick={() => handleDebateMessage()}>
-        Send
-      </Button>
-    </VStack>
+    </>
   );
 };

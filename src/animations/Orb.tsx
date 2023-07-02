@@ -1,7 +1,17 @@
 import { Box, useColorModeValue } from "@chakra-ui/react";
 import { keyframes, css } from "@emotion/react";
 
-export const Orb = () => {
+interface OrbProps {
+  size?: string | string[];
+}
+
+const defaultOrbProps = {
+  size: ["200px", "300px"],
+};
+
+export const Orb = ({ size }: OrbProps) => {
+  const { size: defaultSize } = defaultOrbProps;
+
   const spin = keyframes`
     100% { 
       transform: rotate(360deg); 
@@ -13,8 +23,8 @@ export const Orb = () => {
   return (
     <Box
       display="block"
-      width={["200px", "300px"]}
-      height={["200px", "300px"]}
+      width={size || defaultSize}
+      height={size || defaultSize}
       borderRadius="50%"
       css={css`
         animation: ${spin} 4s linear infinite;

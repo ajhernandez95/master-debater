@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Heading, VStack, Text, Box } from "@chakra-ui/react";
 import { IoMdArrowRoundBack } from "react-icons/io";
-import { Orb } from "../../Orb";
+import { Orb } from "../../animations/Orb";
 import { DebateConfig } from "../../components/debate-config";
 import { DebateConversation } from "../../components/debate-conversation";
 
@@ -27,7 +27,7 @@ export const Debate = () => {
         </VStack>
       )}
       {stepIdx === 1 && (
-        <VStack gap="20px">
+        <>
           <Box position="absolute" top="10px" left="10px">
             <IoMdArrowRoundBack
               cursor="pointer"
@@ -35,8 +35,10 @@ export const Debate = () => {
               onClick={() => setStepIdx(0)}
             />
           </Box>
-          <DebateConversation debateConfig={debateConfig} />
-        </VStack>
+          <VStack gap="20px">
+            <DebateConversation debateConfig={debateConfig} />
+          </VStack>
+        </>
       )}
     </>
   );
