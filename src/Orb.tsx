@@ -18,8 +18,8 @@ export const Orb = ({ size }: OrbProps) => {
     } 
     `;
 
-  const colorA = useColorModeValue("#7f00ff", "#e100ff");
-  const colorB = useColorModeValue("#0071ff", "#00e0ff");
+  const colorA = "#7f00ff";
+  const colorB = "#0071ff";
   return (
     <Box
       display="block"

@@ -1,19 +1,21 @@
 import { defineStyleConfig, extendTheme } from "@chakra-ui/react";
-import { mode } from "@chakra-ui/theme-tools";
-import type { StyleFunctionProps } from "@chakra-ui/styled-system";
 
 const Button = defineStyleConfig({
-  baseStyle: {
-    bg: "whiteAlpha.200",
-    background: "whiteAlpha.200",
-    backgroundColor: "whiteAlpha.200",
-    color: "red.500",
+  variants: {
+    solid: {
+      bg: "whiteAlpha.200",
+      color: "white",
+      _hover: {
+        bg: "whiteAlpha.300",
+      },
+      _active: {
+        bg: "whiteAlpha.400",
+      },
+    },
   },
 });
 
 export const theme = extendTheme({
-  initialColorMode: "dark",
-  useSystemColorMode: false,
   components: {
     Button,
   },
@@ -22,16 +24,13 @@ export const theme = extendTheme({
     body: `'Roboto Mono', sans-serif`,
   },
   styles: {
-    global: (props: StyleFunctionProps) => ({
+    global: {
       body: {
         fontFamily: "body",
-        color: "whiteAlpha.900",
-        bg: mode(
-          "linear-gradient(53deg, rgba(26,30,43,1) 0%, rgba(17,19,33,1) 52%, rgba(26,30,43,1) 100%)",
-          "linear-gradient(53deg, rgba(26,30,43,1) 0%, rgba(17,19,33,1) 52%, rgba(26,30,43,1) 100%)"
-        )(props),
+        color: "white",
+        bg: "linear-gradient(53deg, rgba(26,30,43,1) 0%, rgba(17,19,33,1) 52%, rgba(26,30,43,1) 100%)",
         lineHeight: "base",
       },
-    }),
+    },
   },
 });
