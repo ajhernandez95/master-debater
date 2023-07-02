@@ -1,10 +1,19 @@
-import { extendTheme } from "@chakra-ui/react";
+import { defineStyleConfig, extendTheme } from "@chakra-ui/react";
 import { mode } from "@chakra-ui/theme-tools";
 import type { StyleFunctionProps } from "@chakra-ui/styled-system";
+
+const Button = defineStyleConfig({
+  baseStyle: {
+    bg: "red.200",
+  },
+});
 
 export const theme = extendTheme({
   initialColorMode: "dark",
   useSystemColorMode: false,
+  components: {
+    Button,
+  },
   fonts: {
     heading: `'Roboto Mono', sans-serif`,
     body: `'Roboto Mono', sans-serif`,
