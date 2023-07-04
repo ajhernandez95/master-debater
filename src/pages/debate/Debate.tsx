@@ -20,7 +20,7 @@ export const Debate = () => {
       {stepIdx === 0 && (
         <VStack justifyContent="center" gap="50px">
           <Heading as="h1" fontWeight="500" fontSize="4xl">
-            Can you defeat the Master Debater?
+            Can you outlast the Master Debater?
           </Heading>
           <Orb />
           <DebateConfig setDebateConfig={setDebateConfig} />
@@ -29,11 +29,7 @@ export const Debate = () => {
       {stepIdx === 1 && (
         <>
           <Box position="absolute" top="10px" left="10px">
-            <IoMdArrowRoundBack
-              cursor="pointer"
-              size={30}
-              onClick={() => setStepIdx(0)}
-            />
+            <IoMdArrowRoundBack cursor="pointer" size={30} onClick={() => setStepIdx(0)} />
           </Box>
           <VStack gap="20px">
             <DebateConversation debateConfig={debateConfig} />

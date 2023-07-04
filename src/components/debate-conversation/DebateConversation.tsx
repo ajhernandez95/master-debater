@@ -14,6 +14,8 @@ type Inputs = {
 
 export const DebateConversation = ({ debateConfig }: DebateConversationProps) => {
   const [messages, setMessages] = useState<any[]>([]);
+  const [isSending, setIsSending] = useState<boolean>(false);
+  const [debateStarted, setDebateStarted] = useState<boolean>(false); // New state to track if the debate has started
   const boxRef = useRef<HTMLDivElement>(null);
   const {
     register,
@@ -27,6 +29,11 @@ export const DebateConversation = ({ debateConfig }: DebateConversationProps) =>
   const onSubmit: SubmitHandler<Inputs> = (data) => console.log(data);
 
   useEffect(() => {
+    const textAreaElement = document.getElementById("debate-textarea");
+    textAreaElement?.focus();
+  }, []);
+
+  useEffect(() => {
     if (boxRef.current) {
       boxRef.current.scrollTop = boxRef.current.scrollHeight;
     }
@@ -35,7 +42,7 @@ export const DebateConversation = ({ debateConfig }: DebateConversationProps) =>
   const handleKeyDown = (e: any) => {
     if (e.key === "Enter" && !e.metaKey) {
       e.preventDefault(); // This prevents the default behavior of the enter key (new line)
-      handleDebateMessage();
+      if (!isSending) handleDebateMessage();
     }
     // When both the cmd key and the enter key are pressed
     else if (e.metaKey && e.key === "Enter") {
@@ -48,8 +55,16 @@ export const DebateConversation = ({ debateConfig }: DebateConversationProps) =>
     }
   };
 
+  const startDebate = async () => {
+    // Logic to let AI start the debate
+    // ...
+    setDebateStarted(true); // Set debate started to true
+  };
+
   const handleDebateMessage = async () => {
     try {
+      if (isSending) return;
+      setIsSending(true);
       const currMessages = [...messages, { role: "user", content: currMsg }];
       setMessages((prevMessages) => [
         ...prevMessages,
@@ -96,15 +111,23 @@ export const DebateConversation = ({ debateConfig }: DebateConversationProps) =>
           });
 
           console.log("Stream complete");
+          setIsSending(false);
           return;
         }
 
         // Decoding in streaming mode
         string += decoder.decode(value, { stream: true });
 
+        setMessages((prevMessages) => {
+          const updatedMessages = [...prevMessages];
+          updatedMessages[updatedMessages.length - 1].content = string;
+          return updatedMessages;
+        });
+
         return reader.read().then(processStream);
       });
     } catch (error) {
+      setIsSending(false);
       console.error("Error:", error);
     }
   };
@@ -143,12 +166,13 @@ export const DebateConversation = ({ debateConfig }: DebateConversationProps) =>
           onSubmit={handleSubmit(onSubmit)}
         >
           <Textarea
+            id="debate-textarea"
             mb="10px"
             placeholder="Type your response here"
             onKeyDown={handleKeyDown}
             {...register("currMsg")}
           />
-          <Button mb="10px" alignSelf="flex-end" onClick={() => handleDebateMessage()}>
+          <Button mb="10px" alignSelf="flex-end" onClick={() => handleDebateMessage()} isDisabled={isSending}>
             Send
           </Button>
         </form>

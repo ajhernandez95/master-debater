@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { Box, Button, HStack, Input, Text } from "@chakra-ui/react";
 import { getRandomTopic, getRandomPersona } from "../../utils/debatConfig";
@@ -26,6 +26,23 @@ export const DebateConfig = ({ setDebateConfig }: DebateConfigProps) => {
   const topic = watch("topic");
   const persona = watch("persona");
 
+  useEffect(() => {
+    if (stepIdx === 0) {
+      const topicInput = document.querySelector('input[name="topic"]');
+      (topicInput as HTMLInputElement)?.focus();
+    } else if (stepIdx === 1) {
+      const personaInput = document.querySelector('input[name="persona"]');
+      (personaInput as HTMLInputElement)?.focus();
+    }
+  }, [stepIdx]);
+
+  useEffect(() => {
+    if (stepIdx === 1) {
+      const personaInput = document.querySelector('input[name="persona"]');
+      (personaInput as HTMLInputElement)?.focus();
+    }
+  }, [stepIdx]);
+
   const handleDebateSetup = () => {
     setDebateConfig({ topic, persona });
   };
@@ -45,18 +62,14 @@ export const DebateConfig = ({ setDebateConfig }: DebateConfigProps) => {
       <form onSubmit={handleSubmit(onSubmit)}>
         {stepIdx === 0 && (
           <>
-            <Text mb="20px">What is the topic of our debate?</Text>
+            <Text mb="20px">What is the topic of the debate?</Text>
             <Input
-              maxW="80%"
-              placeholder="You can choose any topic, be it
-            climate change, artificial intelligence, space travel, or even if
-            the sky is blue."
+              maxW="85%"
+              placeholder="Choose a topic - gun control, free will, is a hotdog a sandwich, etc."
               {...register("topic")}
             />
             <HStack mt="30px" gap="10px" justifyContent="center">
-              <Button onClick={() => handleRandomize("topic")}>
-                Randomize
-              </Button>
+              <Button onClick={() => handleRandomize("topic")}>Randomize</Button>
               <Button type="submit" onClick={() => setStepIdx(1)}>
                 Next
               </Button>
@@ -69,17 +82,12 @@ export const DebateConfig = ({ setDebateConfig }: DebateConfigProps) => {
               Who would you like to engage in a debate?
             </Text>
             <Input
-              maxW="80%"
-              placeholder="Select any persona or
-            individual, be it historical figures like Albert Einstein or Abraham
-            Lincoln, fictional characters like Sherlock Holmes or Iron Man, or
-            prominent personalities such as Elon Musk or Michelle Obama."
               {...register("persona")}
+              maxW="85%"
+              placeholder="Select a persona - Elon Musk, Ben Shapiro, Genius Physicist, etc"
             />
             <HStack mt="30px" gap="10px" justifyContent="center">
-              <Button onClick={() => handleRandomize("persona")}>
-                Randomize
-              </Button>
+              <Button onClick={() => handleRandomize("persona")}>Randomize</Button>
               <Button type="submit" onClick={() => handleDebateSetup()}>
                 Let's Debate
               </Button>
