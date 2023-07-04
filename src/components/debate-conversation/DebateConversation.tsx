@@ -1,14 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
-import {
-  VStack,
-  Grid,
-  GridItem,
-  Text,
-  Textarea,
-  Button,
-  Box,
-} from "@chakra-ui/react";
+import { VStack, Grid, GridItem, Text, Textarea, Button, Box } from "@chakra-ui/react";
 import { Orb } from "../../Orb";
 import Loader from "../../animations/Loader";
 
@@ -20,9 +12,7 @@ type Inputs = {
   currMsg: string;
 };
 
-export const DebateConversation = ({
-  debateConfig,
-}: DebateConversationProps) => {
+export const DebateConversation = ({ debateConfig }: DebateConversationProps) => {
   const [messages, setMessages] = useState<any[]>([]);
   const boxRef = useRef<HTMLDivElement>(null);
   const {
@@ -43,8 +33,18 @@ export const DebateConversation = ({
   }, [messages]);
 
   const handleKeyDown = (e: any) => {
-    if (e.metaKey && e.which === 13) {
+    if (e.key === "Enter" && !e.metaKey) {
+      e.preventDefault(); // This prevents the default behavior of the enter key (new line)
       handleDebateMessage();
+    }
+    // When both the cmd key and the enter key are pressed
+    else if (e.metaKey && e.key === "Enter") {
+      e.preventDefault(); // Prevent the default behavior
+      const cursorPosition = e.currentTarget.selectionStart; // Get the current cursor position
+      const currentValue = e.currentTarget.value; // Get the current value of the textarea
+      // Insert a newline character at the cursor position
+      const newValue = currentValue.slice(0, cursorPosition) + "\n" + currentValue.slice(cursorPosition);
+      setValue("currMsg", newValue);
     }
   };
 
@@ -111,26 +111,13 @@ export const DebateConversation = ({
 
   return (
     <>
-      <VStack
-        fontSize="16px"
-        maxH="100vh"
-        height="100%"
-        justifyContent="space-between"
-      >
+      <VStack fontSize="16px" maxH="100vh" height="100%" justifyContent="space-between">
         <Box minH="80vh" maxH="80vh" overflowY="auto" ref={boxRef}>
-          <Grid
-            pt="10px"
-            mb="10px"
-            w="80vw"
-            templateRows="repeat(auto-fill, auto)"
-            gap={4}
-          >
+          <Grid pt="10px" mb="10px" w="80vw" templateRows="repeat(auto-fill, auto)" gap={4}>
             {messages.map((message) => {
               return (
                 <GridItem
-                  justifySelf={
-                    message.role === "assistant" ? "flex-start" : "flex-end"
-                  }
+                  justifySelf={message.role === "assistant" ? "flex-start" : "flex-end"}
                   key={message.content}
                   w="auto"
                   maxW="80%"
@@ -161,22 +148,12 @@ export const DebateConversation = ({
             onKeyDown={handleKeyDown}
             {...register("currMsg")}
           />
-          <Button
-            mb="10px"
-            alignSelf="flex-end"
-            onClick={() => handleDebateMessage()}
-          >
+          <Button mb="10px" alignSelf="flex-end" onClick={() => handleDebateMessage()}>
             Send
           </Button>
         </form>
       </VStack>
-      <Box
-        position="absolute"
-        top="50%"
-        left="50%"
-        transform="translate(-50%, -70%)"
-        zIndex={-1}
-      >
+      <Box position="absolute" top="50%" left="50%" transform="translate(-50%, -70%)" zIndex={-1}>
         <Orb />
       </Box>
     </>
