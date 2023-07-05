@@ -1,12 +1,9 @@
-import {
-  createBrowserRouter,
-  RouterProvider,
-  Navigate,
-} from "react-router-dom";
+import { createBrowserRouter, RouterProvider, Navigate } from "react-router-dom";
 import { ChakraProvider } from "@chakra-ui/react";
 import { theme } from "./themes";
 import { Root } from "./components/root";
 import { Debate } from "./pages/debate";
+import useUserId from "./hooks/useUserId";
 
 export const routes = [
   {
@@ -34,11 +31,13 @@ const router = createBrowserRouter([
   },
 ]);
 
-export const App = () => (
-  <ChakraProvider theme={theme}>
-    <RouterProvider router={router} />
-  </ChakraProvider>
-);
+export const App = () => {
+  return (
+    <ChakraProvider theme={theme}>
+      <RouterProvider router={router} />
+    </ChakraProvider>
+  );
+};
 
 /**
  * 1. What are you debating
