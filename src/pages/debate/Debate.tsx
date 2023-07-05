@@ -20,7 +20,7 @@ export const Debate = () => {
       {stepIdx === 0 && (
         <VStack justifyContent="center" gap="50px">
           <Heading as="h1" fontWeight="500" fontSize="4xl">
-            Can you outlast the Master Debater?
+            Challenge the AI to a debate!
           </Heading>
           <Orb />
           <DebateConfig setDebateConfig={setDebateConfig} />
