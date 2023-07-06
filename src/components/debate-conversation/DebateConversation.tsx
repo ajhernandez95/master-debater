@@ -276,7 +276,7 @@ export const DebateConversation = ({ debateConfig }: DebateConversationProps) =>
                 bg="gray.800"
                 color="gray.100"
               >
-                <Button onClick={debateAI}>Let AI Respond For You</Button>
+                <Button onClick={debateAI}>Let AI Respond For You OR Respond Below</Button>
               </GridItem>
             )}
           </Grid>
