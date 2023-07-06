@@ -58,14 +58,15 @@ export const DebateConversation = ({ debateConfig }: DebateConversationProps) =>
   };
 
   const startDebate = async () => {
-    await debateUser(`${truncateTopic(debateConfig.persona)}, you start the debate!`);
+    await debateUser(`${truncateTopic(debateConfig.persona)}, you start the debate about ${debateConfig.topic}!`);
     setDebateStarted(true);
   };
 
-  async function debateUser(userMessage: string, includeUserMessage: boolean = true) {
+  async function debateUser(userMessage: string) {
     if (isSending) return;
     setIsSending(true);
     setDebateStarted(true);
+    setValue("currMsg", "");
 
     const currMessages: Message[] = [...messages, { role: "user", content: userMessage }];
 
@@ -100,7 +101,6 @@ export const DebateConversation = ({ debateConfig }: DebateConversationProps) =>
 
     await streamAIResponse(currMessages, false, streamCallBack, completedCallBack);
 
-    setValue("currMsg", "");
     setIsSending(false);
   }
 
