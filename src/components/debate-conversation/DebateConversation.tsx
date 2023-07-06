@@ -34,17 +34,17 @@ export const DebateConversation = ({ debateConfig }: DebateConversationProps) =>
     document.getElementById("debate-textarea")?.focus();
   }, []);
 
-  // useEffect(() => {
-  //   if (boxRef.current) {
-  //     const scrollPosition = boxRef.current.scrollTop;
-  //     const maxScroll = boxRef.current.scrollHeight - boxRef.current.clientHeight;
+  useEffect(() => {
+    if (boxRef.current) {
+      const scrollPosition = boxRef.current.scrollTop;
+      const maxScroll = boxRef.current.scrollHeight - boxRef.current.clientHeight;
 
-  //     // Only scroll to the bottom if the user is within 50 pixels from the bottom
-  //     if (maxScroll - scrollPosition < 50) {
-  //       boxRef.current.scrollTop = boxRef.current.scrollHeight;
-  //     }
-  //   }
-  // }, [messages]);
+      // Only scroll to the bottom if the user is within 50 pixels from the bottom
+      if (maxScroll - scrollPosition < 100) {
+        boxRef.current.scrollTop = boxRef.current.scrollHeight;
+      }
+    }
+  }, [messages]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter") {
