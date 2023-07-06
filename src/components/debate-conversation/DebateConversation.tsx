@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useForm, SubmitHandler } from "react-hook-form";
+import { useForm, SubmitHandler, set } from "react-hook-form";
 import { VStack, Grid, GridItem, Text, Textarea, Button, Box, HStack, Heading } from "@chakra-ui/react";
 import { Orb } from "../../Orb";
 import Loader from "../../animations/Loader";
@@ -34,11 +34,17 @@ export const DebateConversation = ({ debateConfig }: DebateConversationProps) =>
     document.getElementById("debate-textarea")?.focus();
   }, []);
 
-  useEffect(() => {
-    if (boxRef.current) {
-      boxRef.current.scrollTop = boxRef.current.scrollHeight;
-    }
-  }, [messages]);
+  // useEffect(() => {
+  //   if (boxRef.current) {
+  //     const scrollPosition = boxRef.current.scrollTop;
+  //     const maxScroll = boxRef.current.scrollHeight - boxRef.current.clientHeight;
+
+  //     // Only scroll to the bottom if the user is within 50 pixels from the bottom
+  //     if (maxScroll - scrollPosition < 50) {
+  //       boxRef.current.scrollTop = boxRef.current.scrollHeight;
+  //     }
+  //   }
+  // }, [messages]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter") {
@@ -94,6 +100,7 @@ export const DebateConversation = ({ debateConfig }: DebateConversationProps) =>
 
     await streamAIResponse(currMessages, false, streamCallBack, completedCallBack);
 
+    setValue("currMsg", "");
     setIsSending(false);
   }
 
