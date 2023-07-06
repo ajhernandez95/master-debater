@@ -152,7 +152,6 @@ export const DebateConversation = ({ debateConfig }: DebateConversationProps) =>
           },
         ]);
 
-        console.log(responseForHuman);
         const updatedMessages = messages.concat([{ role: "user", content: responseForHuman }]);
 
         const streamCallBack = async (chunk: string) => {
@@ -171,7 +170,6 @@ export const DebateConversation = ({ debateConfig }: DebateConversationProps) =>
           });
         };
 
-        console.log(JSON.stringify(messages));
         await streamAIResponse(updatedMessages, false, streamCallBack, completedCallBack);
         setIsSending(false);
       }, 2000);
@@ -221,7 +219,6 @@ export const DebateConversation = ({ debateConfig }: DebateConversationProps) =>
 
       string += decoder.decode();
       await completedCallBack(string);
-      console.log("Stream complete");
     } catch (error) {
       console.error("Error:", error);
     }
