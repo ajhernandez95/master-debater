@@ -33,7 +33,7 @@ export const DebateConversation = ({ debateConfig }: DebateConversationProps) =>
   useEffect(() => {
     document.getElementById("debate-textarea")?.focus();
   }, []);
-  
+
   useEffect(() => {
     if (boxRef.current) {
       boxRef.current.scrollTop = boxRef.current.scrollHeight;
@@ -52,7 +52,7 @@ export const DebateConversation = ({ debateConfig }: DebateConversationProps) =>
   };
 
   const startDebate = async () => {
-    await debateUser(`${truncateTopic(debateConfig.persona)}, you start the debate about ${debateConfig.topic}!`);
+    await debateUser(`${debateConfig.persona}, you start the debate about ${debateConfig.topic}!`);
     setDebateStarted(true);
   };
 
