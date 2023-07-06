@@ -130,47 +130,54 @@ export const DebateConversation = ({ debateConfig }: DebateConversationProps) =>
     };
 
     const completedCallBack = async (chunk: string) => {
+      let responseForHuman = "";
+
       setMessages((prevMessages) => {
         const newMessages = [...prevMessages];
         newMessages[newMessages.length - 1].content = chunk;
+        responseForHuman += chunk;
         return newMessages;
       });
+
+      setTimeout(async () => {
+        setMessages((prevMessages: any) => [
+          ...prevMessages,
+          {
+            role: "assistant",
+            content: (
+              <Box w={["25px", "50px"]}>
+                <Loader />
+              </Box>
+            ),
+          },
+        ]);
+
+        console.log(responseForHuman);
+        const updatedMessages = messages.concat([{ role: "user", content: responseForHuman }]);
+
+        const streamCallBack = async (chunk: string) => {
+          setMessages((prevMessages) => {
+            const newMessages = [...prevMessages];
+            newMessages[newMessages.length - 1].content = chunk;
+            return newMessages;
+          });
+        };
+
+        const completedCallBack = async (chunk: string) => {
+          setMessages((prevMessages) => {
+            const newMessages = [...prevMessages];
+            newMessages[newMessages.length - 1].content = chunk;
+            return newMessages;
+          });
+        };
+
+        console.log(JSON.stringify(messages));
+        await streamAIResponse(updatedMessages, false, streamCallBack, completedCallBack);
+        setIsSending(false);
+      }, 2000);
     };
 
     await streamAIResponse(reversedRoleMessages, true, streamCallBack, completedCallBack);
-
-    setTimeout(async () => {
-      setMessages((prevMessages: any) => [
-        ...prevMessages,
-        {
-          role: "assistant",
-          content: (
-            <Box w={["25px", "50px"]}>
-              <Loader />
-            </Box>
-          ),
-        },
-      ]);
-
-      const streamCallBack = async (chunk: string) => {
-        setMessages((prevMessages) => {
-          const newMessages = [...prevMessages];
-          newMessages[newMessages.length - 1].content = chunk;
-          return newMessages;
-        });
-      };
-
-      const completedCallBack = async (chunk: string) => {
-        setMessages((prevMessages) => {
-          const newMessages = [...prevMessages];
-          newMessages[newMessages.length - 1].content = chunk;
-          return newMessages;
-        });
-      };
-
-      await streamAIResponse(messages, false, streamCallBack, completedCallBack);
-      setIsSending(false);
-    }, 2000);
   }
 
   async function streamAIResponse(
@@ -202,18 +209,18 @@ export const DebateConversation = ({ debateConfig }: DebateConversationProps) =>
       const decoder = new TextDecoder("utf-8");
       let string = "";
 
-      const batchDelayMs = 50;
+      const batchDelayMs = 0;
       let result = await reader.read();
 
       while (!result.done) {
         string += decoder.decode(result.value, { stream: true });
-        streamCallBack(string);
+        await streamCallBack(string);
         await sleep(batchDelayMs);
         result = await reader.read();
       }
 
       string += decoder.decode();
-      completedCallBack(string);
+      await completedCallBack(string);
       console.log("Stream complete");
     } catch (error) {
       console.error("Error:", error);
@@ -233,7 +240,9 @@ export const DebateConversation = ({ debateConfig }: DebateConversationProps) =>
   return (
     <>
       <VStack fontSize="16px" maxH="100vh" height="100%" justifyContent="space-between">
-        <Heading mt="10px">Debating {truncateTopic(debateConfig.topic)} with {truncateTopic(debateConfig.persona)}</Heading>
+        <Heading mt="10px">
+          Debating {truncateTopic(debateConfig.topic)} with {truncateTopic(debateConfig.persona)}
+        </Heading>
         <Box minH="70vh" maxH="80vh" overflowY="auto" ref={boxRef}>
           {!debateStarted && (
             <Button mt="10px" onClick={startDebate}>
