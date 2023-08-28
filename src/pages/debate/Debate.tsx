@@ -1,5 +1,12 @@
 import { useState, useEffect } from "react";
-import { Heading, VStack, Text, Box, Link, useColorModeValue } from "@chakra-ui/react";
+import {
+  Heading,
+  VStack,
+  Text,
+  Box,
+  Link,
+  useColorModeValue,
+} from "@chakra-ui/react";
 import { IoMdArrowRoundBack } from "react-icons/io";
 import { Orb } from "../../Orb";
 import { DebateConfig } from "../../components/debate-config";
@@ -29,7 +36,12 @@ export const Debate = () => {
             </Heading>
             <Text fontSize="xl" fontWeight="500">
               Check out our{" "}
-              <Link color={linkColor} target="_blank" rel="noopener noreferrer" href="https://discord.gg/tUhW3m6k">
+              <Link
+                color={linkColor}
+                target="_blank"
+                rel="noopener noreferrer"
+                href="https://discord.gg/Rfhkphgtpj"
+              >
                 discord here
               </Link>
             </Text>
@@ -41,7 +53,11 @@ export const Debate = () => {
       {stepIdx === 1 && (
         <>
           <Box position="absolute" top="10px" left="10px">
-            <IoMdArrowRoundBack cursor="pointer" size={30} onClick={() => setStepIdx(0)} />
+            <IoMdArrowRoundBack
+              cursor="pointer"
+              size={30}
+              onClick={() => setStepIdx(0)}
+            />
           </Box>
           <VStack gap="20px">
             <DebateConversation debateConfig={debateConfig} />
