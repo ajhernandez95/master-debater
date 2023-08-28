@@ -18,6 +18,8 @@ interface ISupabaseContext {
   session: Session | null;
   tier: string | null;
   setTier: Dispatch<SetStateAction<string | null>>;
+  isFreeTier: boolean;
+  setIsFreeTier: Dispatch<SetStateAction<boolean>>;
   supabase: SupabaseClient;
 }
 
@@ -35,6 +37,7 @@ export const SupabaseContextProvider = ({
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [tier, setTier] = useState<string | null>("free");
+  const [isFreeTier, setIsFreeTier] = useState<boolean>(true);
   const [supabase] = useState<SupabaseClient>(supabaseClient);
 
   const getUserTier = async (userId: any) => {
@@ -45,6 +48,7 @@ export const SupabaseContextProvider = ({
       .single()) || { plan: "free" };
 
     setTier(data?.plan);
+    setIsFreeTier(data?.plan === "free");
   };
 
   useEffect(() => {
@@ -90,7 +94,17 @@ export const SupabaseContextProvider = ({
 
   return (
     <SupabaseContext.Provider
-      value={{ isLoading, isLoggedIn, user, session, tier, setTier, supabase }}
+      value={{
+        isLoading,
+        isLoggedIn,
+        user,
+        session,
+        tier,
+        setTier,
+        supabase,
+        isFreeTier,
+        setIsFreeTier,
+      }}
     >
       {children}
     </SupabaseContext.Provider>

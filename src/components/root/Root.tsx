@@ -33,7 +33,8 @@ export const Root = () => {
     <Box textAlign="center" fontSize="xl" overflowY="auto">
       <Box minH="100vh">
         {!isLoggedIn ? (
-          <Box display="flex" justifyContent="flex-end" p="2">
+          <Box display="flex" justifyContent="space-between" p="2">
+            <SideNav />
             <Button onClick={handleLogIn}>Log In</Button>
           </Box>
         ) : (

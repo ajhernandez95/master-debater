@@ -17,8 +17,7 @@ import { useSupabase } from "../../context/SupabaseContext";
 
 const SideNav = () => {
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const { tier, isLoggedIn, supabase } = useSupabase();
-  const [isProTier] = useState(tier === "free");
+  const { isLoggedIn, supabase, isFreeTier } = useSupabase();
   const [isLoading, setIsLoading] = useState(false);
 
   const goToHome = () => {
@@ -72,13 +71,15 @@ const SideNav = () => {
                 >
                   Debate
                 </Button>
-                <Button
-                  variant="ghost"
-                  onClick={goToMyDebates}
-                  justifyContent="flex-start"
-                >
-                  My Debates
-                </Button>
+                {isLoggedIn && (
+                  <Button
+                    variant="ghost"
+                    onClick={goToMyDebates}
+                    justifyContent="flex-start"
+                  >
+                    My Debates
+                  </Button>
+                )}
               </Flex>
               <Flex direction="column">
                 {isLoggedIn && (
@@ -91,7 +92,7 @@ const SideNav = () => {
                     Sign Out
                   </Button>
                 )}
-                {isProTier && (
+                {isLoggedIn && (
                   <Button
                     variant="link"
                     color="blue.500"

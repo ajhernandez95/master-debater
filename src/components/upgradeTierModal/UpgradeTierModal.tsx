@@ -16,7 +16,6 @@ import {
 import axios from "axios";
 import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
 import { useSupabase } from "../../context/SupabaseContext";
-import { Navigate } from "react-router-dom";
 
 export interface UpgradeTierModalProps {
   geniusMode: boolean;
@@ -36,7 +35,7 @@ const UpgradeTierModal = ({
     const value = e.target.checked;
     if (value === true) {
       try {
-        if (tier === "free") {
+        if (tier !== "pro") {
           onOpen();
         } else {
           setGeniusMode(value);
