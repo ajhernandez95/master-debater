@@ -1,9 +1,16 @@
-import { createBrowserRouter, RouterProvider, Navigate } from "react-router-dom";
+import {
+  createBrowserRouter,
+  RouterProvider,
+  Navigate,
+} from "react-router-dom";
 import { ChakraProvider } from "@chakra-ui/react";
 import { theme } from "./themes";
 import { Root } from "./components/root";
 import { Debate } from "./pages/debate";
-import useUserId from "./hooks/useUserId";
+import { SupabaseContextProvider } from "./context/SupabaseContext";
+import { LoginSignUp } from "./pages/loginSignUp";
+import { DebateContextProvider } from "./context/DebateContext";
+import { MyDebates } from "./components/my-debates";
 
 export const routes = [
   {
@@ -12,7 +19,11 @@ export const routes = [
   },
   {
     path: "my-debates",
-    element: <Root />,
+    element: <MyDebates />,
+  },
+  {
+    path: "login",
+    element: <LoginSignUp />,
   },
 ];
 
@@ -34,19 +45,11 @@ const router = createBrowserRouter([
 export const App = () => {
   return (
     <ChakraProvider theme={theme}>
-      <RouterProvider router={router} />
+      <SupabaseContextProvider>
+        <DebateContextProvider>
+          <RouterProvider router={router} />
+        </DebateContextProvider>
+      </SupabaseContextProvider>
     </ChakraProvider>
   );
 };
-
-/**
- * 1. What are you debating
- * 2. Who are you debating - A professor, a politician, Elon Musk, Santa Clause
- *
- * When debate starts, user can enter their opening arugment which selects their stance or let the AI start and choose stance
- */
-
-/**
- * Debates send request to endpoint with the following data structure
- * [{ role: "user", content: "Say poo" }, { role: “assistant”, content: “Poop is brown”}]
- */

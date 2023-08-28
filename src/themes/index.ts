@@ -17,6 +17,8 @@ const Button = defineStyleConfig({
 });
 
 export const theme = extendTheme({
+  initialColorMode: "dark",
+  useSystemColorMode: false,
   components: {
     Button,
   },
@@ -29,18 +31,9 @@ export const theme = extendTheme({
       body: {
         fontFamily: "body",
         color: "white",
-        bg: mode(
-          "linear-gradient(53deg, rgba(26,30,43,1) 0%, rgba(17,19,33,1) 52%, rgba(26,30,43,1) 100%)",
-          "linear-gradient(53deg, rgba(26,30,43,1) 0%, rgba(17,19,33,1) 52%, rgba(26,30,43,1) 100%)"
-        )(props),
-        background: mode(
-          "linear-gradient(53deg, rgba(26,30,43,1) 0%, rgba(17,19,33,1) 52%, rgba(26,30,43,1) 100%)",
-          "linear-gradient(53deg, rgba(26,30,43,1) 0%, rgba(17,19,33,1) 52%, rgba(26,30,43,1) 100%)"
-        )(props),
-        backgroundColor: mode(
-          "linear-gradient(53deg, rgba(26,30,43,1) 0%, rgba(17,19,33,1) 52%, rgba(26,30,43,1) 100%)",
-          "linear-gradient(53deg, rgba(26,30,43,1) 0%, rgba(17,19,33,1) 52%, rgba(26,30,43,1) 100%)"
-        )(props),
+        bg: mode("#0d0f17", "#0d0f17")(props),
+        background: mode("#0d0f17", "#0d0f17")(props),
+        backgroundColor: mode("#0d0f17", "#0d0f17")(props),
         lineHeight: "base",
       },
       html: {
