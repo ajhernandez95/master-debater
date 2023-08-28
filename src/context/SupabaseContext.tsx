@@ -61,12 +61,12 @@ export const SupabaseContextProvider = ({
       } else {
         setSession(session);
         setUser(session?.user || null);
+        getUserTier(session?.user.id);
         setIsLoggedIn(true);
         axios.defaults.headers.common[
           "Authorization"
         ] = `Bearer ${session?.access_token}`;
       }
-      getUserTier(session?.user.id);
       setIsLoading(false);
     });
 
