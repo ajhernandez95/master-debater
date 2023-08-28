@@ -26,7 +26,8 @@ const UpgradeTierModal = ({
   geniusMode,
   setGeniusMode,
 }: UpgradeTierModalProps) => {
-  const { user, supabase, tier } = useSupabase();
+  const { user, supabase, tier, isLoggedIn } = useSupabase();
+  const [upgradeText, setUpgradeText] = useState("");
   const [proMessageCount, setProMessageCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -70,6 +71,14 @@ const UpgradeTierModal = ({
     }
   };
 
+  const handleUpgrade = () => {
+    if (isLoggedIn) {
+      initiateStripePurchase();
+    } else {
+      window.location.href = "/login?redirectToUpgrade=1";
+    }
+  };
+
   const getProTrialCount = async () => {
     const trialCountUsed = await supabase
       .from("profiles")
@@ -100,6 +109,14 @@ const UpgradeTierModal = ({
 
     getProTrialCount();
   }, []);
+
+  useEffect(() => {
+    if (!user) {
+      setUpgradeText("Log In to Begin Trial");
+    } else {
+      setUpgradeText("Upgrade");
+    }
+  }, [user]);
 
   return (
     <>
@@ -134,9 +151,11 @@ const UpgradeTierModal = ({
                 against a more advanced AI.
               </ListItem>
             </UnorderedList>
-            <Text>
-              {proMessageCount}/5 free Genius Mode debate messages used
-            </Text>
+            {isLoggedIn && (
+              <Text>
+                {proMessageCount}/5 free Genius Mode debate messages used
+              </Text>
+            )}
           </ModalBody>
 
           <ModalFooter>
@@ -145,10 +164,10 @@ const UpgradeTierModal = ({
             </Button>
             <Button
               variant="ghost"
-              onClick={() => initiateStripePurchase()}
+              onClick={handleUpgrade}
               isLoading={isLoading}
             >
-              Upgrade
+              {upgradeText}
             </Button>
           </ModalFooter>
         </ModalContent>
