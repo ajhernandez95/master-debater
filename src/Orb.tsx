@@ -5,6 +5,7 @@ export type Theme = "default" | "genius";
 interface OrbProps {
   size?: string | string[];
   theme?: Theme;
+  loading?: boolean;
 }
 
 const defaultOrbProps = {
@@ -12,8 +13,43 @@ const defaultOrbProps = {
   theme: "default",
 };
 
-export const Orb = ({ size, theme }: OrbProps) => {
+export const Orb = ({ size, theme, loading }: OrbProps) => {
   const { size: defaultSize } = defaultOrbProps;
+
+  const pulse = keyframes`
+    0% {
+      transform: rotate(360deg); 
+      transform: scale(0.95);
+      box-shadow: 0 0 0 0 ${useColorModeValue(
+        "rgba(0, 0, 0, 0.7)",
+        "rgba(255, 255, 255, 0.7)"
+      )};
+    }
+    25% {
+      transform: rotate(360deg); 
+      transform: scale(1);
+      box-shadow: 0 0 0 10px ${useColorModeValue(
+        "rgba(0, 0, 0, 0)",
+        "rgba(255, 255, 255, 0)"
+      )};
+    }
+    60% {
+      transform: rotate(360deg); 
+      transform: scale(0.95);
+      box-shadow: 0 0 0 0 ${useColorModeValue(
+        "rgba(0, 0, 0, 0.7)",
+        "rgba(255, 255, 255, 0.7)"
+      )};
+    }
+    100% {
+      transform: rotate(360deg); 
+      transform: scale(0.9);
+      box-shadow: 0 0 0 0 ${useColorModeValue(
+        "rgba(0, 0, 0, 0.7)",
+        "rgba(255, 255, 255, 0.7)"
+      )};
+    }
+    `;
 
   const spin = keyframes`
     100% { 
@@ -36,18 +72,13 @@ export const Orb = ({ size, theme }: OrbProps) => {
   }
 
   const orbCss = css`
-  animation: ${spin} 4s linear infinite;
-  transition: box-shadow 0.3s ease; // Add transition for box-shadow
-  box-shadow: 
-    inset 0 0 20px ${colorC}, 
-    inset 10px 0 30px ${colorA},
-    inset -10px 0 30px ${colorB}, 
-    inset 10px 0 150px ${colorA},
-    inset -10px 0 150px ${colorB}, 
-    0 0 20px ${colorC},
-    -5px 0 30px ${colorA},
-    5px 0 30px ${colorB};
-`;
+    animation: ${loading ? pulse : spin} 4s linear infinite;
+    transition: box-shadow 0.3s ease; // Add transition for box-shadow
+    box-shadow: inset 0 0 20px ${colorC}, inset 10px 0 30px ${colorA},
+      inset -10px 0 30px ${colorB}, inset 10px 0 150px ${colorA},
+      inset -10px 0 150px ${colorB}, 0 0 20px ${colorC}, -5px 0 30px ${colorA},
+      5px 0 30px ${colorB};
+  `;
 
   return (
     <Box

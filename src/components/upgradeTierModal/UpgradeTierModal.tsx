@@ -14,7 +14,7 @@ import {
   UnorderedList,
 } from "@chakra-ui/react";
 import axios from "axios";
-import { Dispatch, SetStateAction, useEffect, useRef } from "react";
+import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
 import { useSupabase } from "../../context/SupabaseContext";
 import { Navigate } from "react-router-dom";
 
@@ -23,61 +23,70 @@ export interface UpgradeTierModalProps {
   setGeniusMode: Dispatch<SetStateAction<boolean>>;
 }
 
-const initiateStripePurchase = async (redirect = true) => {
-  try {
-    const response = await axios.post(
-      "https://debateai.jawn.workers.dev/api/v1/stripe/create-checkout-session"
-    );
-
-    // Extract the checkout URL from the response data and navigate to it
-    const checkoutUrl = response.data.url;
-
-    if (redirect) {
-      window.location.href = checkoutUrl;
-    } else {
-      return checkoutUrl;
-    }
-  } catch (error) {
-    console.error("An error occurred:", error);
-  }
-};
-
 const UpgradeTierModal = ({
   geniusMode,
   setGeniusMode,
 }: UpgradeTierModalProps) => {
-  const { user, supabase } = useSupabase();
-  const userId = user?.id;
+  const { user, supabase, tier } = useSupabase();
+  const [proMessageCount, setProMessageCount] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const finalRef = useRef(null);
   const handleSwitchToggle = async (e: any) => {
     const value = e.target.checked;
     if (value === true) {
       try {
-        const { data } = (await supabase
-          .from("profiles")
-          .select("plan")
-          .eq("id", userId)
-          .single()) || { plan: "free" };
-
-        if (data?.plan === "free") {
+        if (tier === "free") {
           onOpen();
         } else {
           setGeniusMode(value);
         }
       } catch (error) {
-        console.log(error);
+        console.error(error);
       }
+    } else {
+      setGeniusMode(value);
     }
   };
 
-  const handleMaybeLater = () => {
-    if (!user) {
-      const redirectUrl = initiateStripePurchase(false);
-      <Navigate to={`/login?pathRedirect=${redirectUrl}`} />;
-    } else {
-      onClose();
+  const initiateStripePurchase = async (redirect = true) => {
+    try {
+      setIsLoading(true);
+      const response = await axios.post(
+        "https://debateai.jawn.workers.dev/v1/stripe/create-checkout-session"
+      );
+
+      // Extract the checkout URL from the response data and navigate to it
+      const checkoutUrl = response.data.url;
+
+      if (redirect) {
+        window.location.href = checkoutUrl;
+      } else {
+        return checkoutUrl;
+      }
+    } catch (error) {
+      console.error("An error occurred:", error);
+    } finally {
+      setIsLoading(false);
     }
+  };
+
+  const getProTrialCount = async () => {
+    const trialCountUsed = await supabase
+      .from("profiles")
+      .select("pro_trial_count")
+      .eq("id", user?.id)
+      .single();
+    setProMessageCount(trialCountUsed.data?.pro_trial_count);
+  };
+
+  const handleMaybeLater = () => {
+    if (proMessageCount < 5) {
+      setGeniusMode(true);
+    } else {
+      setGeniusMode(false);
+    }
+    onClose();
   };
 
   useEffect(() => {
@@ -89,6 +98,8 @@ const UpgradeTierModal = ({
       const parsed = JSON.parse(localStoreGeniusMode);
       setGeniusMode(parsed);
     }
+
+    getProTrialCount();
   }, []);
 
   return (
@@ -96,7 +107,7 @@ const UpgradeTierModal = ({
       Genius Mode{" "}
       <Switch
         ref={finalRef}
-        colorScheme="red"
+        colorScheme="blue"
         isChecked={geniusMode}
         onChange={handleSwitchToggle}
       />
@@ -106,37 +117,38 @@ const UpgradeTierModal = ({
           <ModalHeader>Unlock the Power of Genius Mode!</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
-            <Text mb="10px">
-              DebateAI is taking a leap forward. With our latest upgrade, you
-              can now engage in even more dynamic and insightful debates.
-            </Text>
             <Text mb="5px">Why Upgrade?</Text>
             <UnorderedList mb="10px">
               <ListItem>
-                Sharper Arguments: Experience deeper insights and more refined
-                points.
+                <b>Genius Mode</b>: Create unlimited debates using Genius Mode.
               </ListItem>
               <ListItem>
-                Enhanced Learning: Dive deeper into topics and expand your
-                knowledge horizon.
+                <b>Save Debates</b>: Re-live your past debates or resume them at
+                any point.
               </ListItem>
               <ListItem>
-                Greater Challenge: Push your debating skills further against a
-                more advanced AI.
+                <b>Sharper Arguments</b>: Experience deeper insights and more
+                refined points.
+              </ListItem>
+              <ListItem>
+                <b>Greater Challenge</b>: Push your debating skills further
+                against a more advanced AI.
               </ListItem>
             </UnorderedList>
-
             <Text>
-              Take your debates to the next level. Upgrade now and unlock a
-              richer, more immersive debating experience!
+              {proMessageCount}/5 free Genius Mode debate messages used
             </Text>
           </ModalBody>
 
           <ModalFooter>
-            <Button colorScheme="blue" mr={3} onClick={onClose}>
+            <Button colorScheme="blue" mr={3} onClick={handleMaybeLater}>
               Maybe Later
             </Button>
-            <Button variant="ghost" onClick={() => initiateStripePurchase()}>
+            <Button
+              variant="ghost"
+              onClick={() => initiateStripePurchase()}
+              isLoading={isLoading}
+            >
               Upgrade
             </Button>
           </ModalFooter>

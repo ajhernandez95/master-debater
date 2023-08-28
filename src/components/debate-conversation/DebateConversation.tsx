@@ -176,7 +176,7 @@ export const DebateConversation = ({
           body: JSON.stringify({
             userId,
             argument,
-            model: debateConfig.geniusMode ? "gpt-4" : "gpt-3.5-turbo",
+            model: debateConfig.geniusMode ? "gpt-4" : null,
             speaker,
           }),
         }
@@ -227,8 +227,7 @@ export const DebateConversation = ({
         justifyContent="space-between"
       >
         <Heading mt="10px">
-          Debating {truncateTopic(debate.short_topic)} with{" "}
-          {truncateTopic(debate.persona)}
+          Debating {debate.short_topic} with {debate.persona}
         </Heading>
         <Box
           pos="relative"

@@ -37,10 +37,19 @@ export const SupabaseContextProvider = ({
   const [tier, setTier] = useState<string | null>("free");
   const [supabase] = useState<SupabaseClient>(supabaseClient);
 
+  const getUserTier = async (userId: any) => {
+    const { data } = (await supabase
+      .from("profiles")
+      .select("plan")
+      .eq("id", userId)
+      .single()) || { plan: "free" };
+
+    setTier(data?.plan);
+  };
+
   useEffect(() => {
     // Handles initial check if user is logged in
     supabase.auth.getSession().then(({ data: { session }, error }) => {
-      console.log(session);
       if (!session) {
         setSession(null);
         setUser(null);
@@ -53,6 +62,7 @@ export const SupabaseContextProvider = ({
           "Authorization"
         ] = `Bearer ${session?.access_token}`;
       }
+      getUserTier(session?.user.id);
       setIsLoading(false);
     });
 

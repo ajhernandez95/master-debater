@@ -12,6 +12,8 @@ interface IDebateContext {
   setDebateStep: Dispatch<SetStateAction<number>>;
   debate: any;
   setDebate: Dispatch<SetStateAction<any>>;
+  loadingDebate: boolean;
+  setLoadingDebate: Dispatch<SetStateAction<boolean>>;
 }
 
 export const DebateContext = createContext(null as unknown as IDebateContext);
@@ -23,6 +25,7 @@ export const DebateContextProvider = ({
 }) => {
   const [debateStep, setDebateStep] = useState(0);
   const [debate, setDebate] = useState({});
+  const [loadingDebate, setLoadingDebate] = useState(false);
 
   return (
     <DebateContext.Provider
@@ -31,6 +34,8 @@ export const DebateContextProvider = ({
         setDebateStep,
         debate,
         setDebate,
+        loadingDebate,
+        setLoadingDebate,
       }}
     >
       {children}

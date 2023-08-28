@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
-import { Box, Button, HStack, Input, Text } from "@chakra-ui/react";
+import { Box, Button, HStack, Input, Text, useToast } from "@chakra-ui/react";
 import { useNavigate, useLocation } from "react-router-dom";
 
 import { getRandomTopic, getRandomPersona } from "../../utils/debatConfig";
@@ -8,6 +8,7 @@ import { UpgradeTierModal } from "../upgradeTierModal";
 import axios from "axios";
 import useUserId from "../../hooks/useUserId";
 import { useSupabase } from "../../context/SupabaseContext";
+import { useDebate } from "../../context/DebateContext";
 
 interface DebateConfigProps {
   setDebateConfig: (debateConfig: any) => void;
@@ -24,10 +25,10 @@ export const DebateConfig = ({
   setDebateConfig,
   setStartDebate,
 }: DebateConfigProps) => {
+  const toast = useToast();
+  const { setLoadingDebate, setDebate } = useDebate();
   const location = useLocation();
   const navigate = useNavigate();
-
-  const { session } = useSupabase();
   const userId = useUserId();
   const [stepIdx, setStepIdx] = useState(0);
   const {
@@ -38,6 +39,14 @@ export const DebateConfig = ({
     setValue,
   } = useForm<Inputs>();
   const onSubmit: SubmitHandler<Inputs> = (data) => console.log(data);
+  const showErrorToast = (field: string) =>
+    toast({
+      title: "Missing Required Fields.",
+      description: `${field} is a required field.`,
+      status: "error",
+      duration: 2000,
+      isClosable: true,
+    });
 
   const topic = watch("topic");
   const persona = watch("persona");
@@ -55,7 +64,6 @@ export const DebateConfig = ({
   }, []);
 
   useEffect(() => {
-    console.log(geniusMode);
     /**
      * Check if the user has genius mode subscription (sub).
      * If sub then set mode
@@ -75,38 +83,36 @@ export const DebateConfig = ({
       (personaInput as HTMLInputElement)?.focus();
     }
   }, [stepIdx]);
-  /**
-   * curl --request POST \
-  --url https://debateai.jawn.workers.dev/v1/debate \
-  --header 'Content-Type: application/json' \
-  --header 'User-Agent: Insomnia/2023.5.5' \
-  --data '{
-    "topic": "Communism or socialism",
-    "persona": "Elon Musk",
-    "model": "gpt-4",
-    "userId": "3bae1858-c845-4ce0-a359-ad0e8b723ce9",
-    "heh": true
-}'
-   */
 
   const handleDebateSetup = async () => {
-    setDebateConfig({ topic, persona, geniusMode });
-    await axios
-      .post("https://debateai.jawn.workers.dev/v1/debate", {
-        topic,
-        persona,
-        model: geniusMode ? "gpt-4" : "gpt-3.5-turbo",
-        userId,
-      })
-      .then((res) => {
-        const searchParams = new URLSearchParams(location.search);
-        searchParams.set("debate", res.data.id);
-        navigate({
-          ...location,
-          search: searchParams.toString(),
+    if (!persona) {
+      showErrorToast("Persona");
+      return;
+    }
+    setLoadingDebate(true);
+    try {
+      setDebateConfig({ topic, persona, geniusMode });
+      await axios
+        .post("https://debateai.jawn.workers.dev/v1/debate", {
+          topic,
+          persona,
+          model: geniusMode ? "gpt-4" : null,
+          userId,
+        })
+        .then((res) => {
+          const searchParams = new URLSearchParams(location.search);
+          searchParams.set("debate", res.data.id);
+          setDebate(res.data);
+          navigate({
+            ...location,
+            search: searchParams.toString(),
+          });
         });
-      });
-    setStartDebate(true);
+
+      setStartDebate(true);
+    } finally {
+      setLoadingDebate(false);
+    }
   };
 
   const handleRandomize = (key: "topic" | "persona") => {
@@ -134,7 +140,16 @@ export const DebateConfig = ({
               <Button onClick={() => handleRandomize("topic")}>
                 Randomize
               </Button>
-              <Button type="submit" onClick={() => setStepIdx(1)}>
+              <Button
+                type="submit"
+                onClick={() => {
+                  if (!topic) {
+                    showErrorToast("Topic");
+                  } else {
+                    setStepIdx(1);
+                  }
+                }}
+              >
                 Next
               </Button>
             </HStack>

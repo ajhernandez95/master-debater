@@ -15,7 +15,12 @@ import { useSupabase } from "../../context/SupabaseContext";
 
 export const Debate = () => {
   const { supabase } = useSupabase();
-  const { debateStep, setDebateStep, setDebate } = useDebate();
+  const {
+    debateStep,
+    setDebateStep,
+    setDebate,
+    loadingDebate: loading,
+  } = useDebate();
   const debateId = useQueryParam("debate");
 
   const [debateConfig, setDebateConfig] = useState({
@@ -40,7 +45,7 @@ export const Debate = () => {
       setDebateConfig({
         topic: debateRes.data.topic,
         persona: debateRes.data.persona,
-        geniusMode: debateRes.data.modal === "gpt-4",
+        geniusMode: debateRes.data.model === "gpt-4",
       });
     }
     const messageRes = await supabase
@@ -49,9 +54,7 @@ export const Debate = () => {
       .eq("debate_id", debateId);
 
     if (messageRes?.data?.length) {
-      console.log(messageRes);
       const messages = messageRes.data.map((message) => {
-        console.log(message);
         return {
           content: message.content,
           role:
@@ -63,7 +66,6 @@ export const Debate = () => {
 
       setMessages(messages);
     }
-    console.log(debateRes, messageRes);
   };
 
   useEffect(() => {
@@ -108,7 +110,7 @@ export const Debate = () => {
               </Link>
             </Text>
           </VStack>
-          <Orb theme={orbTheme as Theme} />
+          <Orb loading={loading} theme={orbTheme as Theme} />
           <DebateConfig
             setDebateConfig={setDebateConfig}
             setStartDebate={setStartDebate}

@@ -1,4 +1,4 @@
-import { Box, Card, CardBody, useColorModeValue } from "@chakra-ui/react";
+import { Box, Card, CardBody } from "@chakra-ui/react";
 import { Auth } from "@supabase/auth-ui-react";
 import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { useSupabase } from "../../context/SupabaseContext";
