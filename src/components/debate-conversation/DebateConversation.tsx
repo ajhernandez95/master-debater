@@ -1,14 +1,26 @@
 import { useState, useEffect, useRef } from "react";
 import { useForm, SubmitHandler, set } from "react-hook-form";
-import { VStack, Grid, GridItem, Text, Textarea, Button, Box, HStack, Heading } from "@chakra-ui/react";
-import { Orb } from "../../Orb";
+import {
+  VStack,
+  Grid,
+  GridItem,
+  Textarea,
+  Button,
+  Box,
+  HStack,
+  Heading,
+} from "@chakra-ui/react";
+import { Orb, Theme } from "../../Orb";
 import Loader from "../../animations/Loader";
-import { v4 as uuidv4 } from "uuid";
 import useUserId from "../../hooks/useUserId";
 import ReactMarkdown from "react-markdown";
+import useQueryParam from "../../hooks/useQueryParam";
+import { useDebate } from "../../context/DebateContext";
+import { useSupabase } from "../../context/SupabaseContext";
 
 interface DebateConversationProps {
   debateConfig: any;
+  startingMessages?: Message[];
 }
 
 type Inputs = {
@@ -20,14 +32,20 @@ interface Message {
   content: string;
 }
 
-export const DebateConversation = ({ debateConfig }: DebateConversationProps) => {
-  const [messages, setMessages] = useState<Message[]>([]);
+export const DebateConversation = ({
+  debateConfig,
+  startingMessages = [],
+}: DebateConversationProps) => {
+  const debateId = useQueryParam("debate");
+  const { session } = useSupabase();
+  const { debate } = useDebate();
+  const [messages, setMessages] = useState<Message[]>(startingMessages);
   const [isSending, setIsSending] = useState<boolean>(false);
   const [debateStarted, setDebateStarted] = useState<boolean>(false);
+  const [orbTheme, setOrbTheme] = useState("default");
   const boxRef = useRef<HTMLDivElement>(null);
   const { register, handleSubmit, watch, setValue } = useForm<Inputs>();
   const currMsg = watch("currMsg");
-  const debateId = uuidv4();
   const userId = useUserId();
 
   useEffect(() => {
@@ -40,6 +58,15 @@ export const DebateConversation = ({ debateConfig }: DebateConversationProps) =>
     }
   }, [messages]);
 
+  useEffect(() => {
+    const geniusMode = debateConfig.geniusMode;
+    setOrbTheme(geniusMode ? "genius" : "default");
+  }, [debateConfig]);
+
+  useEffect(() => {
+    setMessages(startingMessages);
+  }, [startingMessages]);
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter") {
       e.preventDefault();
@@ -51,8 +78,18 @@ export const DebateConversation = ({ debateConfig }: DebateConversationProps) =>
     }
   };
 
+  const streamCallBack = async (chunk: string) => {
+    setMessages((prevMessages) => {
+      const newMessages = [...prevMessages];
+      newMessages[newMessages.length - 1].content = chunk;
+      return newMessages;
+    });
+  };
+
   const startDebate = async () => {
-    await debateUser(`${debateConfig.persona}, you start the debate about ${debateConfig.topic}!`);
+    await debateUser(
+      `${debateConfig.persona}, you start the debate about ${debateConfig.topic}!`
+    );
     setDebateStarted(true);
   };
 
@@ -62,7 +99,10 @@ export const DebateConversation = ({ debateConfig }: DebateConversationProps) =>
     setDebateStarted(true);
     setValue("currMsg", "");
 
-    const currMessages: Message[] = [...messages, { role: "user", content: userMessage }];
+    const currMessages: Message[] = [
+      ...messages,
+      { role: "user", content: userMessage },
+    ];
 
     setMessages((prevMessages: any) => [
       ...prevMessages,
@@ -77,23 +117,7 @@ export const DebateConversation = ({ debateConfig }: DebateConversationProps) =>
       },
     ]);
 
-    const streamCallBack = async (chunk: string) => {
-      setMessages((prevMessages) => {
-        const newMessages = [...prevMessages];
-        newMessages[newMessages.length - 1].content = chunk;
-        return newMessages;
-      });
-    };
-
-    const completedCallBack = async (chunk: string) => {
-      setMessages((prevMessages) => {
-        const newMessages = [...prevMessages];
-        newMessages[newMessages.length - 1].content = chunk;
-        return newMessages;
-      });
-    };
-
-    await streamAIResponse(currMessages, false, streamCallBack, completedCallBack);
+    await streamAIResponse({ argument: userMessage, speaker: "user" });
 
     setIsSending(false);
   }
@@ -103,13 +127,7 @@ export const DebateConversation = ({ debateConfig }: DebateConversationProps) =>
     setIsSending(true);
     setDebateStarted(true);
 
-    const reversedRoleMessages: Message[] = messages.map((message) => {
-      return {
-        ...message,
-        role: message.role === "user" ? "assistant" : "user",
-      };
-    });
-
+    // Add the loader
     setMessages((prevMessages: any) => [
       ...prevMessages,
       {
@@ -121,86 +139,51 @@ export const DebateConversation = ({ debateConfig }: DebateConversationProps) =>
         ),
       },
     ]);
+    await streamAIResponse({ speaker: "AI_for_user" });
 
-    const streamCallBack = async (chunk: string) => {
-      setMessages((prevMessages) => {
-        const newMessages = [...prevMessages];
-        newMessages[newMessages.length - 1].content = chunk;
-        return newMessages;
-      });
-    };
+    setMessages((prevMessages: any) => [
+      ...prevMessages,
+      {
+        role: "assistant",
+        content: (
+          <Box w={["25px", "50px"]}>
+            <Loader />
+          </Box>
+        ),
+      },
+    ]);
 
-    const completedCallBack = async (chunk: string) => {
-      let responseForHuman = "";
-
-      setMessages((prevMessages) => {
-        const newMessages = [...prevMessages];
-        newMessages[newMessages.length - 1].content = chunk;
-        responseForHuman += chunk;
-        return newMessages;
-      });
-
-      setTimeout(async () => {
-        setMessages((prevMessages: any) => [
-          ...prevMessages,
-          {
-            role: "assistant",
-            content: (
-              <Box w={["25px", "50px"]}>
-                <Loader />
-              </Box>
-            ),
-          },
-        ]);
-
-        const updatedMessages = messages.concat([{ role: "user", content: responseForHuman }]);
-
-        const streamCallBack = async (chunk: string) => {
-          setMessages((prevMessages) => {
-            const newMessages = [...prevMessages];
-            newMessages[newMessages.length - 1].content = chunk;
-            return newMessages;
-          });
-        };
-
-        const completedCallBack = async (chunk: string) => {
-          setMessages((prevMessages) => {
-            const newMessages = [...prevMessages];
-            newMessages[newMessages.length - 1].content = chunk;
-            return newMessages;
-          });
-        };
-
-        await streamAIResponse(updatedMessages, false, streamCallBack, completedCallBack);
-        setIsSending(false);
-      }, 2000);
-    };
-
-    await streamAIResponse(reversedRoleMessages, true, streamCallBack, completedCallBack);
+    await streamAIResponse({ speaker: "AI" });
+    setIsSending(false);
   }
 
-  async function streamAIResponse(
-    debateMessages: Message[],
-    isReversed: boolean,
-    streamCallBack: (chunk: string) => Promise<void>,
-    completedCallBack: (chunk: string) => Promise<void>
-  ) {
+  async function streamAIResponse({
+    argument = "",
+    speaker,
+  }: {
+    argument?: string;
+    speaker: string;
+  }) {
     try {
-      const response = await fetch("https://master-debater.jawn.workers.dev", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          topic: debateConfig.topic,
-          persona: debateConfig.persona,
-          debate: debateMessages,
-          isReversed: isReversed,
-          userId: userId,
-          debateId: debateId,
-        }),
-      });
+      const response = await fetch(
+        `https://debateai.jawn.workers.dev/v1/debate/${debateId}/turn`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session?.access_token}`,
+          },
+          body: JSON.stringify({
+            userId,
+            argument,
+            model: debateConfig.geniusMode ? "gpt-4" : null,
+            speaker,
+          }),
+        }
+      );
 
       if (!response.body) {
-        console.log("No response body to stream from");
+        console.error("No response body to stream from");
         return;
       }
 
@@ -219,7 +202,7 @@ export const DebateConversation = ({ debateConfig }: DebateConversationProps) =>
       }
 
       string += decoder.decode();
-      await completedCallBack(string);
+      await streamCallBack(string);
     } catch (error) {
       console.error("Error:", error);
     }
@@ -232,26 +215,53 @@ export const DebateConversation = ({ debateConfig }: DebateConversationProps) =>
   const onSubmit: SubmitHandler<Inputs> = (data) => console.log(data);
 
   const truncateTopic = (topic: string) => {
-    return topic.length > 30 ? topic.substring(0, 30) + "..." : topic;
+    return topic?.length > 30 ? topic.substring(0, 30) + "..." : topic;
   };
 
   return (
     <>
-      <VStack fontSize="16px" maxH="100vh" height="100%" justifyContent="space-between">
+      <VStack
+        fontSize="16px"
+        maxH="100vh"
+        height="100%"
+        justifyContent="space-between"
+      >
         <Heading mt="10px">
-          Debating {truncateTopic(debateConfig.topic)} with {truncateTopic(debateConfig.persona)}
+          Debating {debate.short_topic} with {debate.persona}
         </Heading>
-        <Box minH="70vh" maxH="80vh" overflowY="auto" ref={boxRef}>
-          {!debateStarted && (
+        <Box
+          pos="relative"
+          minH="70vh"
+          maxH="80vh"
+          overflowY="auto"
+          ref={boxRef}
+        >
+          <Box
+            position="absolute"
+            top="50%"
+            left="50%"
+            transform="translate(-50%, -50%)"
+          >
+            <Orb theme={orbTheme as Theme} />
+          </Box>
+          {!debateStarted && !messages?.length && (
             <Button mt="10px" onClick={startDebate}>
               Let AI Start The Debate
             </Button>
           )}
-          <Grid pt="10px" mb="10px" w="80vw" templateRows="repeat(auto-fill, auto)" gap={4}>
+          <Grid
+            pt="10px"
+            mb="10px"
+            w="80vw"
+            templateRows="repeat(auto-fill, auto)"
+            gap={4}
+          >
             {messages.map((message, index) => {
               return (
                 <GridItem
-                  justifySelf={message.role === "assistant" ? "flex-start" : "flex-end"}
+                  justifySelf={
+                    message.role === "assistant" ? "flex-start" : "flex-end"
+                  }
                   key={index}
                   w="auto"
                   maxW="80%"
@@ -260,6 +270,7 @@ export const DebateConversation = ({ debateConfig }: DebateConversationProps) =>
                   textAlign="start"
                   bg={message.role === "assistant" ? "gray.200" : "gray.800"}
                   color={message.role === "assistant" ? "gray.800" : "gray.100"}
+                  zIndex={3}
                 >
                   <ReactMarkdown>{message.content}</ReactMarkdown>
                 </GridItem>
@@ -276,7 +287,10 @@ export const DebateConversation = ({ debateConfig }: DebateConversationProps) =>
                 bg="gray.800"
                 color="gray.100"
               >
-                <Button onClick={debateAI}>Let AI Respond For You <br/>OR Respond Below</Button>
+                <Button onClick={debateAI}>
+                  Let AI Respond For You <br />
+                  OR Respond Below
+                </Button>
               </GridItem>
             )}
           </Grid>
@@ -298,15 +312,17 @@ export const DebateConversation = ({ debateConfig }: DebateConversationProps) =>
             {...register("currMsg")}
           />
           <HStack justifyContent="center">
-            <Button mb="10px" alignSelf="flex-end" onClick={() => debateUser(currMsg)} isDisabled={isSending}>
+            <Button
+              mb="10px"
+              alignSelf="flex-end"
+              onClick={() => debateUser(currMsg)}
+              isDisabled={isSending}
+            >
               Send
             </Button>
           </HStack>
         </form>
       </VStack>
-      <Box position="absolute" top="50%" left="50%" transform="translate(-50%, -70%)" zIndex={-1}>
-        <Orb />
-      </Box>
     </>
   );
 };

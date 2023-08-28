@@ -1,18 +1,35 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
-import { Box, Button, HStack, Input, Text } from "@chakra-ui/react";
+import { Box, Button, HStack, Input, Text, useToast } from "@chakra-ui/react";
+import { useNavigate, useLocation } from "react-router-dom";
+
 import { getRandomTopic, getRandomPersona } from "../../utils/debatConfig";
+import { UpgradeTierModal } from "../upgradeTierModal";
+import axios from "axios";
+import useUserId from "../../hooks/useUserId";
+import { useSupabase } from "../../context/SupabaseContext";
+import { useDebate } from "../../context/DebateContext";
 
 interface DebateConfigProps {
   setDebateConfig: (debateConfig: any) => void;
+  setStartDebate: (start: boolean) => void;
 }
 
 type Inputs = {
   topic: string;
   persona: string;
+  geniusMode: boolean;
 };
 
-export const DebateConfig = ({ setDebateConfig }: DebateConfigProps) => {
+export const DebateConfig = ({
+  setDebateConfig,
+  setStartDebate,
+}: DebateConfigProps) => {
+  const toast = useToast();
+  const { setLoadingDebate, setDebate } = useDebate();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const userId = useUserId();
   const [stepIdx, setStepIdx] = useState(0);
   const {
     register,
@@ -22,9 +39,40 @@ export const DebateConfig = ({ setDebateConfig }: DebateConfigProps) => {
     setValue,
   } = useForm<Inputs>();
   const onSubmit: SubmitHandler<Inputs> = (data) => console.log(data);
+  const showErrorToast = (field: string) =>
+    toast({
+      title: "Missing Required Fields.",
+      description: `${field} is a required field.`,
+      status: "error",
+      duration: 2000,
+      isClosable: true,
+    });
 
   const topic = watch("topic");
   const persona = watch("persona");
+  const [geniusMode, setGeniusMode] = useState(false);
+
+  useEffect(() => {
+    const localStoreGeniusMode =
+      localStorage.getItem("geniusMode") &&
+      JSON.parse(localStorage.getItem("geniusMode") as string);
+
+    if (localStoreGeniusMode) {
+      const parsed = JSON.parse(localStoreGeniusMode);
+      setValue("geniusMode", parsed);
+    }
+  }, []);
+
+  useEffect(() => {
+    /**
+     * Check if the user has genius mode subscription (sub).
+     * If sub then set mode
+     * Else prompt modal to go upgrade
+     */
+
+    localStorage.setItem("geniusMode", JSON.stringify(geniusMode));
+    setDebateConfig({ topic, persona, geniusMode });
+  }, [geniusMode]);
 
   useEffect(() => {
     if (stepIdx === 0) {
@@ -36,15 +84,35 @@ export const DebateConfig = ({ setDebateConfig }: DebateConfigProps) => {
     }
   }, [stepIdx]);
 
-  useEffect(() => {
-    if (stepIdx === 1) {
-      const personaInput = document.querySelector('input[name="persona"]');
-      (personaInput as HTMLInputElement)?.focus();
+  const handleDebateSetup = async () => {
+    if (!persona) {
+      showErrorToast("Persona");
+      return;
     }
-  }, [stepIdx]);
+    setLoadingDebate(true);
+    try {
+      setDebateConfig({ topic, persona, geniusMode });
+      await axios
+        .post("https://debateai.jawn.workers.dev/v1/debate", {
+          topic,
+          persona,
+          model: geniusMode ? "gpt-4" : null,
+          userId,
+        })
+        .then((res) => {
+          const searchParams = new URLSearchParams(location.search);
+          searchParams.set("debate", res.data.id);
+          setDebate(res.data);
+          navigate({
+            ...location,
+            search: searchParams.toString(),
+          });
+        });
 
-  const handleDebateSetup = () => {
-    setDebateConfig({ topic, persona });
+      setStartDebate(true);
+    } finally {
+      setLoadingDebate(false);
+    }
   };
 
   const handleRandomize = (key: "topic" | "persona") => {
@@ -69,8 +137,19 @@ export const DebateConfig = ({ setDebateConfig }: DebateConfigProps) => {
               {...register("topic")}
             />
             <HStack mt="30px" gap="10px" justifyContent="center">
-              <Button onClick={() => handleRandomize("topic")}>Randomize</Button>
-              <Button type="submit" onClick={() => setStepIdx(1)}>
+              <Button onClick={() => handleRandomize("topic")}>
+                Randomize
+              </Button>
+              <Button
+                type="submit"
+                onClick={() => {
+                  if (!topic) {
+                    showErrorToast("Topic");
+                  } else {
+                    setStepIdx(1);
+                  }
+                }}
+              >
                 Next
               </Button>
             </HStack>
@@ -78,7 +157,7 @@ export const DebateConfig = ({ setDebateConfig }: DebateConfigProps) => {
         )}
         {stepIdx === 1 && (
           <>
-            <Text m="auto" mb="20px">
+            <Text display="flex" justifyContent="center" mb="20px">
               Who would you like to engage in a debate?
             </Text>
             <Input
@@ -86,11 +165,29 @@ export const DebateConfig = ({ setDebateConfig }: DebateConfigProps) => {
               maxW="85%"
               placeholder="Select a persona - Elon Musk, Ben Shapiro, Genius Physicist, etc"
             />
-            <HStack mt="30px" gap="10px" justifyContent="center">
-              <Button onClick={() => handleRandomize("persona")}>Randomize</Button>
-              <Button type="submit" onClick={() => handleDebateSetup()}>
-                Let's Debate
-              </Button>
+            <HStack
+              mt="30px"
+              spacing="10px"
+              justifyContent="center"
+              wrap="wrap"
+            >
+              <Box>
+                {/* Genius Mode{" "}
+                <Switch colorScheme="red" {...register("geniusMode")} /> */}
+                <UpgradeTierModal
+                  geniusMode={geniusMode}
+                  setGeniusMode={setGeniusMode}
+                />
+              </Box>
+
+              <HStack spacing="10px" wrap="wrap">
+                <Button onClick={() => handleRandomize("persona")}>
+                  Randomize
+                </Button>
+                <Button type="submit" onClick={() => handleDebateSetup()}>
+                  Let's Debate
+                </Button>
+              </HStack>
             </HStack>
           </>
         )}
