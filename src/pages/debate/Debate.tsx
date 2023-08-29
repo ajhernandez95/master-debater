@@ -61,6 +61,7 @@ export const Debate = () => {
             message.speaker === "user" || message.speaker === "AI_for_user"
               ? "user"
               : "assistant",
+          model: message.model,
         };
       });
 

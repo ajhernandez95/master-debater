@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useForm, SubmitHandler, set } from "react-hook-form";
+import { useForm, SubmitHandler } from "react-hook-form";
 import {
   VStack,
   Grid,
@@ -9,7 +9,10 @@ import {
   Box,
   HStack,
   Heading,
+  Flex,
+  Tooltip,
 } from "@chakra-ui/react";
+import { GiBrain } from "react-icons/gi";
 import { Orb, Theme } from "../../Orb";
 import Loader from "../../animations/Loader";
 import useUserId from "../../hooks/useUserId";
@@ -30,6 +33,7 @@ type Inputs = {
 interface Message {
   role: "user" | "assistant";
   content: string;
+  model?: string;
 }
 
 export const DebateConversation = ({
@@ -78,10 +82,11 @@ export const DebateConversation = ({
     }
   };
 
-  const streamCallBack = async (chunk: string) => {
+  const streamCallBack = async (chunk: string, model: string) => {
     setMessages((prevMessages) => {
       const newMessages = [...prevMessages];
       newMessages[newMessages.length - 1].content = chunk;
+      newMessages[newMessages.length - 1].model = model;
       return newMessages;
     });
   };
@@ -187,6 +192,8 @@ export const DebateConversation = ({
         return;
       }
 
+      const model = response.headers.get("debateai-turn-model");
+
       const reader = response.body.getReader();
       const decoder = new TextDecoder("utf-8");
       let string = "";
@@ -196,13 +203,13 @@ export const DebateConversation = ({
 
       while (!result.done) {
         string += decoder.decode(result.value, { stream: true });
-        await streamCallBack(string);
+        await streamCallBack(string, model as string);
         await sleep(batchDelayMs);
         result = await reader.read();
       }
 
       string += decoder.decode();
-      await streamCallBack(string);
+      await streamCallBack(string, model as string);
     } catch (error) {
       console.error("Error:", error);
     }
@@ -214,10 +221,6 @@ export const DebateConversation = ({
 
   const onSubmit: SubmitHandler<Inputs> = (data) => console.log(data);
 
-  const truncateTopic = (topic: string) => {
-    return topic?.length > 30 ? topic.substring(0, 30) + "..." : topic;
-  };
-
   return (
     <>
       <VStack
@@ -226,24 +229,18 @@ export const DebateConversation = ({
         height="100%"
         justifyContent="space-between"
       >
-        <Heading mt="10px">
+        <Heading zIndex={3} mt="10px">
           Debating {debate.short_topic} with {debate.persona}
         </Heading>
         <Box
-          pos="relative"
-          minH="70vh"
-          maxH="80vh"
-          overflowY="auto"
-          ref={boxRef}
+          position="absolute"
+          top="50%"
+          left="50%"
+          transform="translate(-50%, -50%)"
         >
-          <Box
-            position="absolute"
-            top="50%"
-            left="50%"
-            transform="translate(-50%, -50%)"
-          >
-            <Orb theme={orbTheme as Theme} />
-          </Box>
+          <Orb theme={orbTheme as Theme} />
+        </Box>
+        <Box minH="70vh" maxH="80vh" overflowY="auto" ref={boxRef}>
           {!debateStarted && !messages?.length && (
             <Button mt="10px" onClick={startDebate}>
               Let AI Start The Debate
@@ -273,6 +270,14 @@ export const DebateConversation = ({
                   zIndex={3}
                 >
                   <ReactMarkdown>{message.content}</ReactMarkdown>
+                  {message.role === "assistant" &&
+                    message.model === "gpt-4" && (
+                      <Flex justifyContent="flex-end">
+                        <Tooltip shouldWrapChildren={true} label="Genius Mode">
+                          <GiBrain />
+                        </Tooltip>
+                      </Flex>
+                    )}
                 </GridItem>
               );
             })}
