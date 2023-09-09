@@ -6,6 +6,7 @@ import {
   Link,
   useColorModeValue,
   Box,
+  Tooltip,
 } from "@chakra-ui/react";
 import { Orb, Theme } from "../../Orb";
 import { DebateConfig } from "../../components/debate-config";
@@ -120,18 +121,23 @@ export const Debate = () => {
             setDebateConfig={setDebateConfig}
             setStartDebate={setStartDebate}
           />
-          <NavLink to={getDonateLink()}>
+          <NavLink to={getDonateLink()} target="_blank">
             <Box
-              display="flex"
-              alignItems="center"
               position={["absolute", "fixed"]}
-              gap="10px"
               bottom="10px"
               left="10px"
               cursor="pointer"
             >
-              <GiBrain />
-              <Text fontWeight="600"> Donate</Text>
+              <Tooltip
+                label="Support DebateAI.org in Keeping Conversations Free and Enlightening!"
+                aria-label="donate"
+                shouldWrapChildren={true}
+              >
+                <Box display="flex" alignItems="center" gap="10px">
+                  <GiBrain />
+                  <Text fontWeight="600"> Donate</Text>
+                </Box>
+              </Tooltip>
             </Box>
           </NavLink>
         </VStack>
