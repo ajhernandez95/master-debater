@@ -52,7 +52,7 @@ const LoginSignUp = () => {
           <CardBody>
             <Auth
               supabaseClient={supabase}
-              providers={[]}
+              providers={["google"]}
               appearance={{
                 theme: ThemeSupa,
               }}
