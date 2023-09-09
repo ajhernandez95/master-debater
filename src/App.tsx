@@ -11,6 +11,7 @@ import { SupabaseContextProvider } from "./context/SupabaseContext";
 import { LoginSignUp } from "./pages/loginSignUp";
 import { DebateContextProvider } from "./context/DebateContext";
 import { MyDebates } from "./components/my-debates";
+import { About } from "./pages/about";
 
 export const routes = [
   {
@@ -24,6 +25,10 @@ export const routes = [
   {
     path: "login",
     element: <LoginSignUp />,
+  },
+  {
+    path: "about",
+    element: <About />,
   },
 ];
 
