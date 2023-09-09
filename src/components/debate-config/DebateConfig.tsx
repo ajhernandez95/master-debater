@@ -1,14 +1,23 @@
 import { useState, useEffect } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
-import { Box, Button, HStack, Input, Text, useToast } from "@chakra-ui/react";
+import {
+  Box,
+  Button,
+  HStack,
+  Input,
+  Text,
+  useDisclosure,
+  useToast,
+} from "@chakra-ui/react";
 import { useNavigate, useLocation } from "react-router-dom";
 
 import { getRandomTopic, getRandomPersona } from "../../utils/debatConfig";
-import { UpgradeTierModal } from "../upgradeTierModal";
+import { UpgradeTierModal } from "../upgrade-tier-modal";
 import axios from "axios";
 import useUserId from "../../hooks/useUserId";
 import { useSupabase } from "../../context/SupabaseContext";
 import { useDebate } from "../../context/DebateContext";
+import { SignUpModal } from "../sign-up-modal";
 
 interface DebateConfigProps {
   setDebateConfig: (debateConfig: any) => void;
@@ -26,6 +35,8 @@ export const DebateConfig = ({
   setStartDebate,
 }: DebateConfigProps) => {
   const toast = useToast();
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const { isLoggedIn } = useSupabase();
   const { setLoadingDebate, setDebate } = useDebate();
   const location = useLocation();
   const navigate = useNavigate();
@@ -38,7 +49,7 @@ export const DebateConfig = ({
     formState: { errors },
     setValue,
   } = useForm<Inputs>();
-  const onSubmit: SubmitHandler<Inputs> = (data) => console.log(data);
+  const onSubmit: SubmitHandler<Inputs> = (data) => null;
   const showErrorToast = (field: string) =>
     toast({
       title: "Missing Required Fields.",
@@ -91,25 +102,31 @@ export const DebateConfig = ({
     }
     setLoadingDebate(true);
     try {
-      setDebateConfig({ topic, persona, geniusMode });
-      await axios
-        .post("https://debateai.jawn.workers.dev/v1/debate", {
-          topic,
-          persona,
-          model: geniusMode ? "gpt-4" : null,
-          userId,
-        })
-        .then((res) => {
-          const searchParams = new URLSearchParams(location.search);
-          searchParams.set("debate", res.data.id);
-          setDebate(res.data);
-          navigate({
-            ...location,
-            search: searchParams.toString(),
+      if (!isOpen && !isLoggedIn) {
+        onOpen();
+        return;
+      } else {
+        onClose();
+        setDebateConfig({ topic, persona, geniusMode });
+        await axios
+          .post("https://debateai.jawn.workers.dev/v1/debate", {
+            topic,
+            persona,
+            model: geniusMode ? "gpt-4" : null,
+            userId,
+          })
+          .then((res) => {
+            const searchParams = new URLSearchParams(location.search);
+            searchParams.set("debate", res.data.id);
+            setDebate(res.data);
+            navigate({
+              ...location,
+              search: searchParams.toString(),
+            });
           });
-        });
 
-      setStartDebate(true);
+        setStartDebate(true);
+      }
     } finally {
       setLoadingDebate(false);
     }
@@ -127,6 +144,11 @@ export const DebateConfig = ({
 
   return (
     <Box w="100%" maxW="600px">
+      <SignUpModal
+        isOpen={isOpen}
+        handleSignUp={() => navigate("/login")}
+        handleMaybeLater={handleDebateSetup}
+      />
       <form onSubmit={handleSubmit(onSubmit)}>
         {stepIdx === 0 && (
           <>
