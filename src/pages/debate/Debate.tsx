@@ -5,6 +5,7 @@ import {
   Text,
   Link,
   useColorModeValue,
+  Box,
 } from "@chakra-ui/react";
 import { Orb, Theme } from "../../Orb";
 import { DebateConfig } from "../../components/debate-config";
@@ -12,6 +13,9 @@ import { DebateConversation } from "../../components/debate-conversation";
 import useQueryParam from "../../hooks/useQueryParam";
 import { useDebate } from "../../context/DebateContext";
 import { useSupabase } from "../../context/SupabaseContext";
+import { GiBrain } from "react-icons/gi";
+import { getDonateLink } from "../../utils/stripe";
+import { NavLink } from "react-router-dom";
 
 export const Debate = () => {
   const { supabase } = useSupabase();
@@ -116,6 +120,20 @@ export const Debate = () => {
             setDebateConfig={setDebateConfig}
             setStartDebate={setStartDebate}
           />
+          <NavLink to={getDonateLink()}>
+            <Box
+              display="flex"
+              alignItems="center"
+              position={["absolute", "fixed"]}
+              gap="10px"
+              bottom="10px"
+              left="10px"
+              cursor="pointer"
+            >
+              <GiBrain />
+              <Text fontWeight="600"> Donate</Text>
+            </Box>
+          </NavLink>
         </VStack>
       )}
       {debateStep === 1 && (
